@@ -24,7 +24,7 @@ public interface IProblem {
 	 * @return a list of edges that form a minimum spanning tree
 	 */
     <V, E extends Comparable<E>> List<Edge<V>> mst(WeightedGraph<V, E> g);
-
+	
 	/**
 	 * Compute the best point for the power company to start searching for the cause
 	 * of a power outage.
