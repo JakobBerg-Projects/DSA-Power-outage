@@ -150,121 +150,98 @@ public class ProblemSolver implements IProblem {
     }
     
     @Override
-public <V> Edge<V> addRedundant(Graph<V> tree, V root) {
-      // Step 1: Precompute the subtree sizes for each node
-      Map<V, Integer> subtreeSizes = calculateSubtreeSizes(tree, root);
-        
-      // Step 2: Find all potential candidate edges that are missing in the tree
-      List<Edge<V>> candidateEdges = findAllCandidateEdges(tree);
+public <V> Edge<V> addRedundant(Graph<V> g, V root) {
+    V firstNode = root;
+    V secondNode = root;
+    boolean onlyOneRoot = false;
+    if (g.neighbours(root).size() == 1) {
+        onlyOneRoot = true;
+    }
 
-      // Initialize variables to store the best edge and minimum outage
-      int minWorstOutage = Integer.MAX_VALUE;
-      Edge<V> bestEdge = null;
+    HashSet<V> rootNeighbours = new HashSet<>();
+    for (V neighbour : g.neighbours(root)) {
+        rootNeighbours.add(neighbour);
+    }
 
-      // Step 3: Iterate through all candidate edges and evaluate them
-      for (Edge<V> candidate : candidateEdges) {
-          // Create a clone of the tree and add the candidate edge to form a cycle
-          Graph<V> modifiedTree = tree.clone();
-          modifiedTree.addEdge(candidate.a, candidate.b);
+    V rootBiggestSubTree = biggestTree(g, rootNeighbours, root);
+    rootNeighbours.remove(rootBiggestSubTree);
 
-          // Step 4: Calculate the worst-case outage after removing one edge from the modified graph
-          int worstOutage = calculateWorstOutage(modifiedTree, root, subtreeSizes);
+    if (onlyOneRoot) {
+        secondNode = findDeepestNodeInSubtree(g, rootBiggestSubTree, root);
 
-          // Update the best edge if this candidate provides a smaller outage
-          if (worstOutage < minWorstOutage) {
-              minWorstOutage = worstOutage;
-              bestEdge = candidate;
-          }
-      }
+    } else {
+        firstNode = findDeepestNodeInSubtree(g, rootBiggestSubTree, root);
+        V nextBiggestRoot = biggestTree(g, rootNeighbours, root);
+        secondNode = findDeepestNodeInSubtree(g, nextBiggestRoot, root);
+    }
 
-      return bestEdge;
-  }
+    return new Edge<V>(firstNode, secondNode);
+}
+private <V> V biggestTree(Graph<V> g, HashSet<V> rootNeighbours, V originalroot) {
 
-  /**
-   * Precompute the size of the subtree rooted at each node.
-   */
-  private <V> Map<V, Integer> calculateSubtreeSizes(Graph<V> tree, V root) {
-      Map<V, Integer> subtreeSizes = new HashMap<>();
-      calculateSubtreeSizeDFS(tree, root, null, subtreeSizes);
-      return subtreeSizes;
-  }
+    HashMap<V, Integer> depthMap = new HashMap<>();
+    HashMap<V, Integer> subtreeSizeMap = new HashMap<>();
+    V depthNode = null;
 
-  /**
-   * DFS to calculate the size of the subtree rooted at a node.
-   */
-  private <V> int calculateSubtreeSizeDFS(Graph<V> tree, V current, V parent, Map<V, Integer> subtreeSizes) {
-      int size = 1; // The current node counts as 1
-      for (V neighbor : tree.neighbours(current)) {
-          if (!neighbor.equals(parent)) {
-              size += calculateSubtreeSizeDFS(tree, neighbor, current, subtreeSizes);
-          }
-      }
-      subtreeSizes.put(current, size);
-      return size;
-  }
+    for (V ver : rootNeighbours) {
+        Queue<V> queue = new LinkedList<>();
+        queue.add(ver);
+        depthMap.put(ver, 0);
+        int currentSubtreeSize = 0;
 
-  /**
-   * Find all possible pairs of nodes that are not directly connected by an edge.
-   */
-  private <V> List<Edge<V>> findAllCandidateEdges(Graph<V> tree) {
-      List<Edge<V>> candidateEdges = new ArrayList<>();
-      Set<V> vertices = new HashSet<>();
-      
-      // Collect all vertices
-      for (V vertex : tree.vertices()) {
-          vertices.add(vertex);
-      }
+        while (!queue.isEmpty()) {
+            V current = queue.poll();
+            int currentDepth = depthMap.get(current);
 
-      // Check all pairs of vertices and find missing edges
-      for (V u : vertices) {
-          for (V v : vertices) {
-              if (!u.equals(v) && !tree.adjacent(u, v)) {
-                  candidateEdges.add(new Edge<>(u, v));
-              }
-          }
-      }
+            for (V neighbor : g.neighbours(current)) {
+                if (!depthMap.containsKey(neighbor) && !neighbor.equals(originalroot)) {
+                    depthMap.put(neighbor, currentDepth + 1);
+                    queue.add(neighbor);
+                    currentSubtreeSize++;
+                }
+            }
+        }
+        subtreeSizeMap.put(ver, currentSubtreeSize);
+    }
+    int maxSubtreeSize = -1;
+    for (Map.Entry<V, Integer> entry : subtreeSizeMap.entrySet()) {
+        if (entry.getValue() > maxSubtreeSize) {
+            maxSubtreeSize = entry.getValue();
+            depthNode = entry.getKey();
+        }
+    }
 
-      return candidateEdges;
-  }
+    return depthNode;
 
-  /**
-   * Calculate the worst-case outage after removing any edge from the graph.
-   * For each edge removal, the worst-case outage is the number of nodes that are disconnected from the root.
-   */
-  private <V> int calculateWorstOutage(Graph<V> modifiedTree, V root, Map<V, Integer> subtreeSizes) {
-      int maxOutage = 0;
+}
+private <V> V findDeepestNodeInSubtree(Graph<V> g, V rootNode, V originalRoot) {
+    if (rootNode == null)
+        return null;
 
-      // Step 1: Iterate over all edges in the modified graph (except the newly added edge)
-      for (Edge<V> edge : modifiedTree.edges()) {
-          // Simulate removing this edge from the graph
-          modifiedTree.removeEdge(edge);
+        Queue<V> queue = new LinkedList<>();
 
-          // Step 2: Use DFS to calculate the size of the disconnected components
-          Set<V> visited = new HashSet<>();
-          dfs(modifiedTree, root, visited); // Perform DFS starting from the root
-          
-          // Calculate the number of disconnected nodes (i.e., the size of the largest disconnected component)
-          int disconnectedNodes = modifiedTree.size() - visited.size();
+        queue.add(rootNode);
+        HashMap<V, Integer> depthMap = new HashMap<>();
+        depthMap.put(rootNode, 0);
+        V deepestNode = rootNode;
+        int maxDepth = 0;
+        depthMap.put(originalRoot, null);
 
-          // Step 3: Restore the edge back to the modified tree after simulating its removal
-          modifiedTree.addEdge(edge);
+        while (!queue.isEmpty()) {
+            V current = queue.poll();
+            int currentDepth = depthMap.get(current);
 
-          // Step 4: Track the worst outage (i.e., the largest number of disconnected nodes after edge removal)
-          maxOutage = Math.max(maxOutage, disconnectedNodes);
-      }
-
-      return maxOutage;
-  }
-
-  /**
-   * Standard DFS implementation to explore the connected component from the root.
-   */
-  private <V> void dfs(Graph<V> graph, V current, Set<V> visited) {
-      visited.add(current);
-      for (V neighbor : graph.neighbours(current)) {
-          if (!visited.contains(neighbor)) {
-              dfs(graph, neighbor, visited);
-          }
-      }
-  }
+            for (V neighbor : g.neighbours(current)) {
+                if (!depthMap.containsKey(neighbor)) {
+                    depthMap.put(neighbor, currentDepth + 1);
+                    queue.add(neighbor);
+                    if (currentDepth + 1 > maxDepth) {
+                        maxDepth = currentDepth + 1;
+                        deepestNode = neighbor;
+                    }
+                }
+            }
+        }
+        return deepestNode; // Returns the deepest node found in the subtree
+    }
 }
