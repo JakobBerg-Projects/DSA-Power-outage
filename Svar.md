@@ -50,6 +50,14 @@ For each method of the different strategies give a runtime analysis in Big-O not
     Tidskompleksitet: O(m + n + min(d_u, d_v)), hvor m er antall kanter, n er antall noder, og d_u og d_v er dybden til nodene u og v.
     Dette inkluderer to kall til findPath, som hver er O(m + n), og deretter en O(min(d_u, d_v)) løkke for å finne siste felles forfar.
 
-* ``addRedundant(Graph<T> g, T root)``: O(?)
-    * *Insert description of why the method has the given runtime*
+* ``addRedundant(Graph<T> g, T root)``: O(m+n)
+    biggestTree(Graph<T> g, HashSet<T> rootNeighbours, T originalRoot): O(m + n)
+    Denne metoden finner det største undertreet blant rotens naboer. For hver nabo til roten utfører den en BFS for å beregne størrelsen på undertreet. Selv om det kan virke som om vi utfører flere BFS-er, sørger vi for at hver node bare blir besøkt én gang totalt ved å dele opp grafen i undertrær (siden de kun er forbundet via roten). Siden den samlede tiden for alle BFS-kall er O(m + n), blir kompleksiteten for metoden O(m+n)
+
+    findDeepestNodeInSubtree(Graph<T> g, T rootNode, T originalRoot): O(m + n)
+    Denne metoden finner den dypeste noden i et gitt undertre startet fra rootNode, uten å besøke originalRoot igjen. I vverste fall kan undertreet inneholde alle noder og kanter i grafen, noe som gir kompleksitet O(m + n).
+
+    addRedundant(Graph<T> g, T root): O(m + n)
+    Denne metoden har som mål å finne to noder i grafen som, når de kobles sammen med en ny kant, minimerer diameteren til grafen. For å oppnå dette, utfører den flere operasjoner som samlet sett har en tidskompleksitet på O(m + n), der m er antall kanter og n er antall noder i grafen. Selv om vi har flere kall til metoder med O(m + n) kompleksitet, blir den totale kompleksiteten fortsatt O(m + n) fordi hver node og kant i grafen blir besøkt maksimalt et konstant antall ganger.
+
 

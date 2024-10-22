@@ -151,6 +151,9 @@ public class ProblemSolver implements IProblem {
     
     @Override
 public <V> Edge<V> addRedundant(Graph<V> g, V root) {
+
+    // Sjekker om roten har kun én nabo
+    // Kompleksitet: O(1), da vi sjekker størrelsen på listen over naboer
     V firstNode = root;
     V secondNode = root;
     boolean onlyOneRoot = false;
@@ -158,18 +161,26 @@ public <V> Edge<V> addRedundant(Graph<V> g, V root) {
         onlyOneRoot = true;
     }
 
+    // Lager en HashSet av rotens naboer
+    // Kompleksitet: O(k), der k er grad av roten (antall naboer)
     HashSet<V> rootNeighbours = new HashSet<>();
     for (V neighbour : g.neighbours(root)) {
         rootNeighbours.add(neighbour);
     }
 
+    // Finner det største undertreet ved å kalle biggestTree
+    // Kompleksitet: O(m + n), hvor m er antall kanter og n er antall noder
     V rootBiggestSubTree = biggestTree(g, rootNeighbours, root);
     rootNeighbours.remove(rootBiggestSubTree);
 
     if (onlyOneRoot) {
+        // Hvis roten har kun én nabo, finner vi den dypeste noden i det største undertreet
+        // Kompleksitet: O(m + n)
         secondNode = findDeepestNodeInSubtree(g, rootBiggestSubTree, root);
 
     } else {
+        // Hvis roten har flere naboer, finner vi de dypeste nodene i de to største undertrærne
+        // Kompleksitet for hvert kall: O(m + n)
         firstNode = findDeepestNodeInSubtree(g, rootBiggestSubTree, root);
         V nextBiggestRoot = biggestTree(g, rootNeighbours, root);
         secondNode = findDeepestNodeInSubtree(g, nextBiggestRoot, root);
@@ -179,10 +190,14 @@ public <V> Edge<V> addRedundant(Graph<V> g, V root) {
 }
 private <V> V biggestTree(Graph<V> g, HashSet<V> rootNeighbours, V originalroot) {
 
+     // Initialiserer datastrukturer for å holde dybde og størrelsen på undertrær
     HashMap<V, Integer> depthMap = new HashMap<>();
     HashMap<V, Integer> subtreeSizeMap = new HashMap<>();
     V depthNode = null;
 
+    // For hver nabo til roten, utfører vi BFS for å finne størrelsen på undertreet
+    // Vi unngår å besøke noder som allerede er besøkt i tidligere BFS
+    // Kompleksitet: Totalt O(m + n), siden hver node og kant besøkes maksimalt én gang
     for (V ver : rootNeighbours) {
         Queue<V> queue = new LinkedList<>();
         queue.add(ver);
@@ -203,6 +218,8 @@ private <V> V biggestTree(Graph<V> g, HashSet<V> rootNeighbours, V originalroot)
         }
         subtreeSizeMap.put(ver, currentSubtreeSize);
     }
+    // Finner naboen med størst underliggende tre basert på størrelsen vi har beregnet
+    // Kompleksitet: O(k), der k er antall naboer til roten
     int maxSubtreeSize = -1;
     for (Map.Entry<V, Integer> entry : subtreeSizeMap.entrySet()) {
         if (entry.getValue() > maxSubtreeSize) {
@@ -218,7 +235,10 @@ private <V> V findDeepestNodeInSubtree(Graph<V> g, V rootNode, V originalRoot) {
     if (rootNode == null)
         return null;
 
-        Queue<V> queue = new LinkedList<>();
+    // Utfører BFS for å finne den dypeste noden i undertreet
+    // Starter fra rootNode og unngår å besøke originalRoot
+    // Kompleksitet: O(m + n), da vi traverserer alle noder og kanter i undertreet
+    Queue<V> queue = new LinkedList<>();
 
         queue.add(rootNode);
         HashMap<V, Integer> depthMap = new HashMap<>();
@@ -242,6 +262,6 @@ private <V> V findDeepestNodeInSubtree(Graph<V> g, V rootNode, V originalRoot) {
                 }
             }
         }
-        return deepestNode; // Returns the deepest node found in the subtree
+        return deepestNode; // Returnerer den dypeste noden funnet i undertreet
     }
 }
