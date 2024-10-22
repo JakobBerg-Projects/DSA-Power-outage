@@ -151,150 +151,120 @@ public class ProblemSolver implements IProblem {
     
     @Override
 public <V> Edge<V> addRedundant(Graph<V> tree, V root) {
-    // Step 1: Identify all pairs of nodes that are not directly connected by an edge
-    List<Edge<V>> candidateEdges = findAllCandidateEdges(tree);
-    
-    // Store the minimum outage and the corresponding best edge to add
-    int minOutage = Integer.MAX_VALUE;
-    Edge<V> bestEdge = null;
-
-    // Step 2: Iterate through all candidate edges
-    for (Edge<V> candidate : candidateEdges) {
-        // Step 3: Create a modified graph with the candidate edge added
-        Graph<V> modifiedTree = tree.clone();
-        modifiedTree.addEdge(candidate.a, candidate.b);
-
-        // Step 4: Find the worst case outage after removing one edge in the modified graph
-        int worstOutage = getWorstOutage(modifiedTree, root, candidate);
-
-        // Step 5: Update the best edge if the current candidate results in a smaller outage
-        if (worstOutage < minOutage) {
-            minOutage = worstOutage;
-            bestEdge = candidate;
-        }
-    }
-
-    return bestEdge;
-}
-
-// Helper function to calculate the worst outage after removing one edge
-private <V> int getWorstOutage(Graph<V> graph, V root, Edge<V> addedEdge) {
-    int maxOutage = 0;
-
-    // Step 1: For every edge in the graph except the added edge, simulate its removal
-    for (Edge<V> edge : graph.edges()) {
-        // Skip the added edge since it's part of the cycle and doesn't cause an outage when removed
-        if (edge.equals(addedEdge)) {
-            continue;
-        }
-
-        // Step 2: Clone the graph and remove the current edge
-        Graph<V> modifiedGraph = graph.clone();
-        modifiedGraph.removeEdge(edge);
-
-        // Step 3: Calculate the number of nodes disconnected from the root (outage)
-        int outage = calculateOutage(modifiedGraph, root);
+      // Step 1: Precompute the subtree sizes for each node
+      Map<V, Integer> subtreeSizes = calculateSubtreeSizes(tree, root);
         
-        // Track the worst outage
-        maxOutage = Math.max(maxOutage, outage);
-    }
+      // Step 2: Find all potential candidate edges that are missing in the tree
+      List<Edge<V>> candidateEdges = findAllCandidateEdges(tree);
 
-    return maxOutage;
+      // Initialize variables to store the best edge and minimum outage
+      int minWorstOutage = Integer.MAX_VALUE;
+      Edge<V> bestEdge = null;
+
+      // Step 3: Iterate through all candidate edges and evaluate them
+      for (Edge<V> candidate : candidateEdges) {
+          // Create a clone of the tree and add the candidate edge to form a cycle
+          Graph<V> modifiedTree = tree.clone();
+          modifiedTree.addEdge(candidate.a, candidate.b);
+
+          // Step 4: Calculate the worst-case outage after removing one edge from the modified graph
+          int worstOutage = calculateWorstOutage(modifiedTree, root, subtreeSizes);
+
+          // Update the best edge if this candidate provides a smaller outage
+          if (worstOutage < minWorstOutage) {
+              minWorstOutage = worstOutage;
+              bestEdge = candidate;
+          }
+      }
+
+      return bestEdge;
+  }
+
+  /**
+   * Precompute the size of the subtree rooted at each node.
+   */
+  private <V> Map<V, Integer> calculateSubtreeSizes(Graph<V> tree, V root) {
+      Map<V, Integer> subtreeSizes = new HashMap<>();
+      calculateSubtreeSizeDFS(tree, root, null, subtreeSizes);
+      return subtreeSizes;
+  }
+
+  /**
+   * DFS to calculate the size of the subtree rooted at a node.
+   */
+  private <V> int calculateSubtreeSizeDFS(Graph<V> tree, V current, V parent, Map<V, Integer> subtreeSizes) {
+      int size = 1; // The current node counts as 1
+      for (V neighbor : tree.neighbours(current)) {
+          if (!neighbor.equals(parent)) {
+              size += calculateSubtreeSizeDFS(tree, neighbor, current, subtreeSizes);
+          }
+      }
+      subtreeSizes.put(current, size);
+      return size;
+  }
+
+  /**
+   * Find all possible pairs of nodes that are not directly connected by an edge.
+   */
+  private <V> List<Edge<V>> findAllCandidateEdges(Graph<V> tree) {
+      List<Edge<V>> candidateEdges = new ArrayList<>();
+      Set<V> vertices = new HashSet<>();
+      
+      // Collect all vertices
+      for (V vertex : tree.vertices()) {
+          vertices.add(vertex);
+      }
+
+      // Check all pairs of vertices and find missing edges
+      for (V u : vertices) {
+          for (V v : vertices) {
+              if (!u.equals(v) && !tree.adjacent(u, v)) {
+                  candidateEdges.add(new Edge<>(u, v));
+              }
+          }
+      }
+
+      return candidateEdges;
+  }
+
+  /**
+   * Calculate the worst-case outage after removing any edge from the graph.
+   * For each edge removal, the worst-case outage is the number of nodes that are disconnected from the root.
+   */
+  private <V> int calculateWorstOutage(Graph<V> modifiedTree, V root, Map<V, Integer> subtreeSizes) {
+      int maxOutage = 0;
+
+      // Step 1: Iterate over all edges in the modified graph (except the newly added edge)
+      for (Edge<V> edge : modifiedTree.edges()) {
+          // Simulate removing this edge from the graph
+          modifiedTree.removeEdge(edge);
+
+          // Step 2: Use DFS to calculate the size of the disconnected components
+          Set<V> visited = new HashSet<>();
+          dfs(modifiedTree, root, visited); // Perform DFS starting from the root
+          
+          // Calculate the number of disconnected nodes (i.e., the size of the largest disconnected component)
+          int disconnectedNodes = modifiedTree.size() - visited.size();
+
+          // Step 3: Restore the edge back to the modified tree after simulating its removal
+          modifiedTree.addEdge(edge);
+
+          // Step 4: Track the worst outage (i.e., the largest number of disconnected nodes after edge removal)
+          maxOutage = Math.max(maxOutage, disconnectedNodes);
+      }
+
+      return maxOutage;
+  }
+
+  /**
+   * Standard DFS implementation to explore the connected component from the root.
+   */
+  private <V> void dfs(Graph<V> graph, V current, Set<V> visited) {
+      visited.add(current);
+      for (V neighbor : graph.neighbours(current)) {
+          if (!visited.contains(neighbor)) {
+              dfs(graph, neighbor, visited);
+          }
+      }
+  }
 }
-
-// Helper function to find all pairs of nodes that are not directly connected by an edge
-private <V> List<Edge<V>> findAllCandidateEdges(Graph<V> tree) {
-    List<Edge<V>> candidates = new ArrayList<>();
-    Set<V> nodes = new HashSet<>();
-    
-    // Collect all nodes in the graph
-    for (V node : tree.vertices()) {
-        nodes.add(node);
-    }
-
-    // Iterate over all pairs of nodes and find missing edges
-    for (V u : nodes) {
-        for (V v : nodes) {
-            // Add only if the nodes are not equal and there is no existing edge between them
-            if (!u.equals(v) && !tree.adjacent(u, v)) {
-                candidates.add(new Edge<>(u, v));
-            }
-        }
-    }
-
-    return candidates;
-}
-
-// Helper function to calculate the size of the outage (number of disconnected nodes)
-private <V> int calculateOutage(Graph<V> graph, V root) {
-    Set<V> visited = new HashSet<>();
-    dfs(graph, root, visited);
-
-    // All nodes that are not visited after DFS are considered disconnected
-    return graph.size() - visited.size();
-}
-
-// Standard DFS implementation to explore the connected component from root
-private <V> void dfs(Graph<V> graph, V node, Set<V> visited) {
-    visited.add(node);
-    for (V neighbor : graph.neighbours(node)) {
-        if (!visited.contains(neighbor)) {
-            dfs(graph, neighbor, visited);
-        }
-    }
-}
-
-    
-    class UnionFind<V> {
-        private final Map<V, V> parent = new HashMap<>();
-        private final Map<V, Integer> rank = new HashMap<>();
-        private final Map<V, Integer> size = new HashMap<>();
-    
-        public void add(V v) {
-            parent.put(v, v);
-            rank.put(v, 0);
-            size.put(v, 1);
-        }
-    
-        public V find(V v) {
-            if (parent.get(v) != v) {
-                parent.put(v, find(parent.get(v))); // Path compression
-            }
-            return parent.get(v);
-        }
-    
-        public void union(V a, V b) {
-            V rootA = find(a);
-            V rootB = find(b);
-    
-            if (rootA != rootB) {
-                // Union by rank
-                if (rank.get(rootA) > rank.get(rootB)) {
-                    parent.put(rootB, rootA);
-                    size.put(rootA, size.get(rootA) + size.get(rootB));
-                } else if (rank.get(rootA) < rank.get(rootB)) {
-                    parent.put(rootA, rootB);
-                    size.put(rootB, size.get(rootA) + size.get(rootB));
-                } else {
-                    parent.put(rootB, rootA);
-                    size.put(rootA, size.get(rootA) + size.get(rootB));
-                    rank.put(rootA, rank.get(rootA) + 1);
-                }
-            }
-        }
-    
-        public void undoUnion(V a, V b) {
-            // This method restores the original parent and size of the union
-            V rootA = find(a);
-            V rootB = find(b);
-            
-            if (rootA == b) {
-                parent.put(rootA, rootA);
-                size.put(rootA, size.get(rootA) - size.get(rootB));
-            }
-        }
-    
-        public int getSize(V v) {
-            return size.get(find(v));
-        }
-    }}
