@@ -16,73 +16,78 @@ import java.util.Stack;
 
 public class ProblemSolver implements IProblem {
     
+    /**
+     * Implementerer Prims algoritme for å finne minimum spenntre (MST) av en vektet graf.
+     * @param g Grafen som MST skal finnes for
+     * @return En liste av kanter som utgjør MST
+     * Kompleksitet: O(m log n) eller O((m+n)*log n), der m er antall kanter og n er antall noder
+     */
 	@Override
 	public <V, E extends Comparable<E>> ArrayList<Edge<V>> mst(WeightedGraph<V, E> g) {
     ArrayList<Edge<V>> mstEdges = new ArrayList<>(); // O(1)
     Set<V> visited = new HashSet<>(); // O(1)
 
-	// Bruker grafen sin comparator til å sortere edges
-    // - Kompleksitet: O(1) - køen starter tom, og kantene legges til dynamisk.
+	// Initialiserer en prioritetskø for kantene, som sorterer kantene etter vekt
+    // Kompleksitet: O(1) 
     PriorityQueue<Edge<V>> edgeQueue = new PriorityQueue<>(g); // O(1)
 	
-	// Starter på en tilfeldig node.
-    // // - Kompleksitet: O(1) for å velge startnoden og legge den til i "visited"-settet.
+	// Starter på en vilkårlig node.
     V start = g.getFirstNode(); // O(1)
     visited.add(start); // O(1)
 
-    // Legger så alle edges til denne noden i en priorityQueue
-    // - Kompleksitet: O(deg(start) * log m), der deg(start) er antall noder tilknyttet start.
-    // Hver kant settes inn i priority queue med O(log m), gjentatt for alle tilknyttede kanter.
-    for (Edge<V> edge : g.adjacentEdges(start)) { // O(log m)
-        edgeQueue.add(edge);
+    // Legger alle kantene til startnoden i prioritetskøen
+    // Kompleksitet: O(deg(start) * log n), der deg(start) er graden til startnoden
+    for (Edge<V> edge : g.adjacentEdges(start)) { 
+        edgeQueue.add(edge); // O(log n) per kant
     }
 
-    // Fortsetter til alle vertices er inkludert, eller det ikke er flere edges.
-    // - Løkken kjører for hver kant i grafen maksimalt én gang (m kanter totalt).
-    // - Hver operasjon med priority queue (poll eller add) tar O(log m).
-    //   Derfor er den totale kompleksiteten for løkken O(m log m).
+    // Fortsetter til alle noder er inkludert, eller det ikke er flere kanter
+    // Total kompleksitet for løkken: O((m log n), siden hver kant håndteres maksimalt to ganger
     while (!edgeQueue.isEmpty()) {
 
-        // Henter den minste kanten fra priority queue:
-        // - Kompleksitet: O(log m) for å fjerne kanten med lavest vekt.
-        Edge<V> currentEdge = edgeQueue.poll();
+        // Henter den kanten med minst vekt
+        Edge<V> currentEdge = edgeQueue.poll(); // O(log n)
 
-        // Sjekker hvilken node som ikke er besøkt:
-        // - Kompleksitet: O(1) for å sjekke medlemskap i HashSet.
+        // Finner destinasjonsnoden som ikke er besøkt
         V destination = currentEdge.a;
         if (visited.contains(destination)) {
             destination = currentEdge.b;
         }
 
-        // Hvis noden (destinasjonen) ikke er besøkt:
-        // - Kompleksitet: O(1) for "contains"-sjekken og å legge til kanten/noden i MST.
+        // Hvis destinasjonsnoden ikke er besøkt
         if (!visited.contains(destination)) {
-            mstEdges.add(currentEdge);
-            visited.add(destination);
+            mstEdges.add(currentEdge); // Legger kanten til i MST
+            visited.add(destination); // Marker noden som besøkt
 
-            // Legger til kantene til den nye noden:
-            // - Kompleksitet: O(deg(destination) * log m) for å legge til de nye kantene.
-            //   Hver kant legges til priority queue med O(log m).
+            // Legger til alle kantene fra destinasjonsnoden til prioritetskøen
+            // Kompleksitet: O(deg(destination) * log n), der deg(destination) er graden til noden
             for (Edge<V> edge : g.adjacentEdges(destination)) {
 
 				// Unngår å legge til kanter der begge nodene er besøkt:
-                // - Kompleksitet: O(1) for hver "visited"-sjekk.
                 if (!visited.contains(edge.a) || !visited.contains(edge.b)) {
-                    edgeQueue.add(edge);
+                    edgeQueue.add(edge); //  O(log n) per innsetting
                 }
             }
         }
     }
 
     return mstEdges;
-}
+    }
 
-
+    /**
+     * Finner den laveste felles stamfaren (LCA) til to noder i et tre.
+     * @param g Grafen (antatt å være et tre)
+     * @param root Roten til treet
+     * @param u Første node
+     * @param v Andre node
+     * @return Den laveste felles stamfaren til u og v
+     * Kompleksitet: O(n)
+     */
     @Override
     public <V> V lca(Graph<V> g, V root, V u, V v) {
 
         // Finner stien fra root til u og fra root til v
-        // Kompleksitet: O(m + n) for hver "findPath"-kall, hvor m er antall kanter og n er antall noder i grafen.
+        // Kompleksitet: O(n) for hvert kall til findPath
         List<V> pathU = findPath(root, u, g);
         List<V> pathV = findPath(root, v, g);
 
@@ -90,9 +95,7 @@ public class ProblemSolver implements IProblem {
         int minLength = Math.min(pathU.size(), pathV.size());
 
         // Itererer gjennom begge stier for å finne siste felles forfar (LCA)
-        // Kompleksitet: O(min(d_u, d_v)), hvor d_u og d_v er dybden til nodene u og v. 
-        // Vi sammenligner hver node i begge stier til de divergerer.
-
+        // Kompleksitet: O(min(d_u, d_v)), hvor d_u og d_v er dybden til nodene u og v
         for (int i = 0; i < minLength; i++) {
             if (pathU.get(i).equals(pathV.get(i))) {
                 lca = pathU.get(i); // Oppdaterer LCA til nåværende felles node
@@ -103,29 +106,36 @@ public class ProblemSolver implements IProblem {
 
         return lca; 
     }
-
+    /**
+     * Hjelpemetode som finner stien fra root til en gitt målnode ved bruk av BFS.
+     * @param root Startnoden
+     * @param goal Målnoden
+     * @param graph Grafen
+     * @return En liste over nodene på stien fra root til goal
+     * Kompleksitet: O(n), der n er antall noder i treet
+     */
 	private <V> List<V> findPath(V root, V goal, Graph<V> graph) {
         Queue<V> queue = new LinkedList<>();
         Set<V> visited = new HashSet<>();
-        Map<V, V> predecessor = new HashMap<>(); // To keep track of the path
+        Map<V, V> predecessor = new HashMap<>(); // For å holde styr på forløperen til hver node
     
         queue.add(root);
         visited.add(root);
     
         // Utfører BFS for å finne stien fra root til goal
-        // Kompleksitet: O(m + n), der m er antall kanter og n er antall noder.
+        // Kompleksitet: O(n)
         while (!queue.isEmpty()) {
             V current = queue.poll();
     
             // Sjekker alle naboer til den nåværende noden
-            // Kompleksitet: Hver nabo blir sjekket én gang totalt gjennom BFS, noe som gir O(m) i verste fall.
+            // Hver nabo blir sjekket én gang totalt gjennom BFS
             for (V neighbor : graph.neighbours(current)) {
                 if (!visited.contains(neighbor)) {
                     visited.add(neighbor);
                     queue.add(neighbor);
                     predecessor.put(neighbor, current); 
     
-                    // Hvis vi finner målnoden, rekonstruer stien
+                    // Hvis vi finner målnoden, rekonstruerer vi stien
                     if (neighbor.equals(goal)) {
                         List<V> path = new ArrayList<>();
                         V step = goal;
@@ -148,9 +158,16 @@ public class ProblemSolver implements IProblem {
         // Return an empty list if no path is found from root to goal
         return new ArrayList<>();
     }
-    
+
+    /**
+    * Finner to noder som skal kobles sammen med en ny kant for å minimere diameteren til treet.
+    * @param g Grafen (antatt å være et tre)
+    * @param root Roten til treet
+    * @return En kant som kan legges til mellom to noder for å redusere diameteren
+    * Kompleksitet: O(n), der n er antall noder.
+    */
     @Override
-public <V> Edge<V> addRedundant(Graph<V> g, V root) {
+    public <V> Edge<V> addRedundant(Graph<V> g, V root) {
 
     // Sjekker om roten har kun én nabo
     // Kompleksitet: O(1), da vi sjekker størrelsen på listen over naboer
@@ -169,18 +186,18 @@ public <V> Edge<V> addRedundant(Graph<V> g, V root) {
     }
 
     // Finner det største undertreet ved å kalle biggestTree
-    // Kompleksitet: O(m + n), hvor m er antall kanter og n er antall noder
+    // Kompleksitet: O(n), hvor n er antall noder
     V rootBiggestSubTree = biggestTree(g, rootNeighbours, root);
     rootNeighbours.remove(rootBiggestSubTree);
 
     if (onlyOneRoot) {
         // Hvis roten har kun én nabo, finner vi den dypeste noden i det største undertreet
-        // Kompleksitet: O(m + n)
+        // Kompleksitet: O(n)
         secondNode = findDeepestNodeInSubtree(g, rootBiggestSubTree, root);
 
     } else {
         // Hvis roten har flere naboer, finner vi de dypeste nodene i de to største undertrærne
-        // Kompleksitet for hvert kall: O(m + n)
+        // Kompleksitet for hvert kall: O(n)
         firstNode = findDeepestNodeInSubtree(g, rootBiggestSubTree, root);
         V nextBiggestRoot = biggestTree(g, rootNeighbours, root);
         secondNode = findDeepestNodeInSubtree(g, nextBiggestRoot, root);
@@ -188,6 +205,15 @@ public <V> Edge<V> addRedundant(Graph<V> g, V root) {
 
     return new Edge<V>(firstNode, secondNode);
 }
+
+/**
+     * Finner den naboen til roten som har det største undertreet.
+     * @param g Grafen
+     * @param rootNeighbours Naboene til roten
+     * @param originalRoot Roten til treet
+     * @return Noden som er roten til det største undertreet
+     * Kompleksitet: O(n)
+     */
 private <V> V biggestTree(Graph<V> g, HashSet<V> rootNeighbours, V originalroot) {
 
      // Initialiserer datastrukturer for å holde dybde og størrelsen på undertrær
@@ -197,7 +223,7 @@ private <V> V biggestTree(Graph<V> g, HashSet<V> rootNeighbours, V originalroot)
 
     // For hver nabo til roten, utfører vi BFS for å finne størrelsen på undertreet
     // Vi unngår å besøke noder som allerede er besøkt i tidligere BFS
-    // Kompleksitet: Totalt O(m + n), siden hver node og kant besøkes maksimalt én gang
+    // Kompleksitet: Totalt O(n), siden hver node og kant besøkes maksimalt én gang
     for (V ver : rootNeighbours) {
         Queue<V> queue = new LinkedList<>();
         queue.add(ver);
@@ -231,13 +257,22 @@ private <V> V biggestTree(Graph<V> g, HashSet<V> rootNeighbours, V originalroot)
     return depthNode;
 
 }
+
+/**
+     * Finner den dypeste noden i et gitt undertre.
+     * @param g Grafen
+     * @param rootNode Roten til undertreet
+     * @param originalRoot Roten til hele treet (som skal unngås)
+     * @return Den dypeste noden i undertreet
+     * Kompleksitet: O(n)
+     */
 private <V> V findDeepestNodeInSubtree(Graph<V> g, V rootNode, V originalRoot) {
     if (rootNode == null)
         return null;
 
     // Utfører BFS for å finne den dypeste noden i undertreet
     // Starter fra rootNode og unngår å besøke originalRoot
-    // Kompleksitet: O(m + n), da vi traverserer alle noder og kanter i undertreet
+    // Kompleksitet: O(n), da vi traverserer alle noder og kanter i undertreet
     Queue<V> queue = new LinkedList<>();
 
         queue.add(rootNode);
@@ -245,7 +280,7 @@ private <V> V findDeepestNodeInSubtree(Graph<V> g, V rootNode, V originalRoot) {
         depthMap.put(rootNode, 0);
         V deepestNode = rootNode;
         int maxDepth = 0;
-        depthMap.put(originalRoot, null);
+        depthMap.put(originalRoot, null); // Marker originalRoot som besøkt
 
         while (!queue.isEmpty()) {
             V current = queue.poll();
