@@ -5,12 +5,7 @@ This project involved the development of a power grid for the town of Flåklypa.
 # Project Overview
 Simplified Power Grid Model: A single type of power cable was assumed for the entire grid, and power requirements across connections were treated uniformly.
 Power Outage Mitigation: Algorithms were developed to identify optimal cable placements to minimize the number of houses affected during outages.
-<div style="display: flex; align-items: center; justify-content: space-between;">
-  <p style="flex: 1;">
-    Throughout this assignment, you will be implementing <code>IProblem</code>.
-  </p>
-  <img src="images/grid.png" alt="drawing" width="350" style="margin-left: 20px;">
-</div>
+<img src="images/grid.png" alt="drawing" width="350" style="float: right; margin-left: 20px; margin-bottom: 10px;">
 
 # Key Features
 Optimized Cable Network: Implemented algorithms to ensure all houses are connected with minimal cable usage while maintaining redundancy for outages.
