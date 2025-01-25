@@ -1,5 +1,5 @@
 # Datastructures and Algorithms INF102 Assignment
-# Power Grid - Semester Assignment 2
+## Power Grid - Semester Assignment 2
 
 ## Scenario
 A power company is building a power grid in the town of Flåklypa.
