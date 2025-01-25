@@ -1,22 +1,21 @@
-# Datastructures and Algorithms INF102 Assignment
-## Power Grid - Semester Assignment 2
+# Power Grid Development for Flåklypa
+## Data Structures and Algorithms - INF102 Semester Assignment 2
+This project involved the development of a power grid for the town of Flåklypa. The grid connects all houses requiring electricity and includes contingency planning for power outages. The solution was implemented with a focus on efficient data structures and algorithms, adhering to the specifications provided in the IProblem interface.
 
-## Scenario
-A power company is building a power grid in the town of Flåklypa.
-All houses which is in need of electricity has to be connected to the power grid, and a plan must be in place in case of power outages.
-In this semester assignment your job is to aid in the development of this power grid. In reality such a grid would be built using a variation of different power cables dependent on the power needs of the respective parts of the grid. In this assignment we simplify the task by saying there is only one type of power cable and that it does not matter how many houses are connected though the same cable. Throughout this assignment you will be implementing ``IProblem``.
+# Project Overview
+Simplified Power Grid Model: A single type of power cable was assumed for the entire grid, and power requirements across connections were treated uniformly.
+Power Outage Mitigation: Algorithms were developed to identify optimal cable placements to minimize the number of houses affected during outages.
+<p align="center"> <img src="images/grid.png" alt="Flåklypa Power Grid Visualization" width="550" /> </p>
 
-<p align="center">
-    <img src="images/grid.png" alt="drawing" width="550" align="center"/>
-</p>
+# Key Features
+Optimized Cable Network: Implemented algorithms to ensure all houses are connected with minimal cable usage while maintaining redundancy for outages.
+Outage Resilience: Designed strategies to add backup connections that minimize the impact of cable failures.
+Interactive Visualization: Solutions can be visualized by running Main.java, allowing real-time inspection of the grid and cable connections.
 
+# Visualization Guide
+The visualization tool provides an interactive way to test and analyze the power grid solution. For more details, refer to the Visualizer Instructions.
 
-
-## Tasks
-This assignment has three tasks:
-1. [Task 1](./guide/task1.md)
-2. [Task 2](./guide/task2.md)
-3. [Task 3](./guide/task3.md)
-
-For each task you can visualize your solution by running `Main.java`. For more information you can read the [instructions](./guide/visualizer.md).
-
+# Supporting Documentation
+Task 1 Implementation Details
+Task 2 Implementation Details
+Task 3 Implementation Details
