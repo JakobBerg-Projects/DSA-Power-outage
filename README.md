@@ -1,11 +1,5 @@
+# Datastructures and Algorithms INF102 Assignment
 # Power Grid - Semester Assignment 2
-
-## ⚠️ IMPORTANT ⚠️
-To ensure you have thoroughly understood the material in this assignment, you may be invited to describe your solution after the submission deadline. This is intended to minimize the use of AI tools and prevent plagiarism. A random group of 20 students will be selected to meet with Sondre and/or Martin to present their work.
-
-**If you are unable to explain your solution adequately, points will be deducted.**
-
-The 20 students will receive an invitation on their student email. Those that do not respond to the email or do not show up to their meeting **will receive 0 points and fail the course**.
 
 ## Scenario
 A power company is building a power grid in the town of Flåklypa.
@@ -26,13 +20,3 @@ This assignment has three tasks:
 
 For each task you can visualize your solution by running `Main.java`. For more information you can read the [instructions](./guide/visualizer.md).
 
-## Grading
-All code you submit will be evaluated on four points:
- - **Functional correctness**. Does the program do what it is supposed to do?
- - **Runtime**. Have you found an efficient solution to the program?
- - **Runtime analysis**. For each method you code you will need to add a comment about which Big-O runtime it has.
- - **Code quality**. Is you code readable and maintainable?
-
-**IMPORTANT**: When implementing the code you must give a description of your solution and runtime analysis in [svar.md](svar.md).
-
-The specific point allocation is described [here](./guide/grading.md).
