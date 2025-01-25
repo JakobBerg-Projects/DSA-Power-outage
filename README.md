@@ -13,9 +13,10 @@ Outage Resilience: Designed strategies to add backup connections that minimize t
 Interactive Visualization: Solutions can be visualized by running Main.java, allowing real-time inspection of the grid and cable connections.
 
 # Visualization Guide
-The visualization tool provides an interactive way to test and analyze the power grid solution. For more details, refer to the Visualizer Instructions.
+The visualization tool provides an interactive way to test and analyze the power grid solution. For more details, refer to the [Visualizer Instructions](./guide/visualizer.md).
 
 # Supporting Documentation
-Task 1 Implementation Details
-Task 2 Implementation Details
-Task 3 Implementation Details
+- [Task 1 Implementation Details](./guide/task1.md)  
+- [Task 2 Implementation Details](./guide/task2.md)  
+- [Task 3 Implementation Details](./guide/task3.md)  
+
